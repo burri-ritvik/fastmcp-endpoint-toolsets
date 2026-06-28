@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastmcp-endpoint-toolsets"
+version = "0.1.0"
+description = "One FastMCP server, one port, many scoped native MCP endpoint toolsets."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Ritvik Burri" }]
+keywords = [
+  "mcp",
+  "fastmcp",
+  "endpoint-toolsets",
+  "scoped-mcp-endpoints",
+  "mcp-server",
+  "tool-groups",
+  "streamable-http"
+]
+dependencies = [
+  "fastmcp>=3.0",
+  "starlette>=0.48",
+  "uvicorn>=0.37"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "server.py",
+  "registry.py",
+  "client.py",
+  "tools/*.py",
+  "static/index.html"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

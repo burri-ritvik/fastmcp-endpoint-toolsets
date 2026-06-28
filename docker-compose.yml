@@ -1,0 +1,9 @@
+# One server, one port, every scoped endpoint behind it.
+#   docker compose up --build
+# Then connect MCP clients to http://127.0.0.1:8001/<toolset>/mcp
+services:
+  endpoint-toolsets:
+    build: .
+    ports:
+      - "8001:8001"
+    restart: unless-stopped

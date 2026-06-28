@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FastMCP Endpoint Toolsets</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e13;
+      --panel: #111824;
+      --panel-2: #161f2e;
+      --line: #233044;
+      --line-soft: #1b2536;
+      --text: #f2f6fb;
+      --muted: #93a2b6;
+      --faint: #6b7c92;
+      --accent: #4fd1c5;
+      --accent-2: #52d273;
+      --warn: #f6ad55;
+      --danger: #f87171;
+      --radius: 14px;
+      --radius-sm: 9px;
+      --gap: 16px;
+      --maxw: 1080px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 500px at 85% -10%, rgba(79,209,197,.08), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { width: min(var(--maxw), calc(100% - 40px)); margin: 0 auto; padding: 40px 0 56px; }
+    code, .mono { font-family: "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace; }
+
+    /* Top bar */
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .01em; }
+    .brand .mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, rgba(79,209,197,.25), rgba(82,210,115,.18)); border: 1px solid var(--line);
+      color: var(--accent); font-family: var(--mono); font-size: 15px; }
+    .brand small { color: var(--faint); font-weight: 500; }
+    .live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted);
+      border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; background: var(--panel); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); box-shadow: 0 0 0 0 rgba(82,210,115,.6); }
+    .live.ok .dot { background: var(--accent-2); animation: pulse 2s infinite; }
+    .live.err .dot { background: var(--danger); }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(82,210,115,.5);} 70% { box-shadow: 0 0 0 7px rgba(82,210,115,0);} 100% { box-shadow: 0 0 0 0 rgba(82,210,115,0);} }
+
+    /* Hero */
+    header { margin-top: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--line-soft); }
+    .eyebrow { color: var(--accent-2); font-size: 12.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 12px 0 0; max-width: 760px; font-size: clamp(30px, 4.6vw, 52px); line-height: 1.05; letter-spacing: -.01em; }
+    .lead { margin: 14px 0 0; max-width: 680px; color: var(--muted); font-size: 17px; }
+    .lead code { color: var(--accent); }
+
+    /* Stat pills */
+    .stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .stat { display: flex; align-items: baseline; gap: 8px; border: 1px solid var(--line); border-radius: 999px;
+      background: var(--panel); padding: 8px 14px; }
+    .stat b { font-size: 16px; color: var(--text); font-variant-numeric: tabular-nums; }
+    .stat span { font-size: 13px; color: var(--muted); }
+
+    /* Sections */
+    section { margin-top: 38px; }
+    .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .sec-head h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .sec-head .note { font-size: 13px; color: var(--faint); }
+
+    /* Grids — auto-flow keeps any count tidy */
+    .grid { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); }
+
+    /* Endpoint cards (server API) */
+    .ep { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+      background: var(--panel); padding: 14px; cursor: pointer; text-align: left; color: inherit; font: inherit;
+      transition: border-color .15s, transform .15s, background .15s; }
+    .ep:hover { border-color: var(--accent); background: var(--panel-2); transform: translateY(-1px); }
+    .ep:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .method { align-self: flex-start; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; padding: 2px 7px;
+      border-radius: 5px; border: 1px solid var(--line); color: var(--accent-2); background: rgba(82,210,115,.08); }
+    .method.mcp { color: var(--accent); background: rgba(79,209,197,.08); }
+    .ep .path { font-size: 14.5px; color: var(--accent); }
+    .ep .desc { font-size: 13px; color: var(--muted); }
+
+    /* Toolset cards */
+    .card { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--panel); padding: 18px; transition: border-color .15s, transform .15s; }
+    .card:hover { border-color: var(--line); transform: translateY(-1px); }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .card-head h3 { margin: 0; font-size: 17px; }
+    .count { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+    .card .desc { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; min-height: 38px; }
+    .endpoint { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #0a0f17;
+      cursor: pointer; transition: border-color .15s; width: 100%; text-align: left; color: inherit; font: inherit; }
+    .endpoint:hover { border-color: var(--accent); }
+    .endpoint:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .endpoint .url { color: var(--accent); font-size: 13.5px; overflow-wrap: anywhere; }
+    .endpoint .copy { color: var(--faint); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+    .meta { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); display: grid; gap: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .chips .label { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); width: 100%; }
+    .chip { font-size: 12px; padding: 3px 8px; border: 1px solid var(--line); }
+    /* Tools = the real MCP tool ids: monospace, accent, code-style box. */
+    .chip.tool { font-family: "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace; font-weight: 500;
+      color: var(--accent); background: rgba(79,209,197,.10); border-color: rgba(79,209,197,.32); border-radius: 6px; }
+    /* Tags = secondary metadata: quiet rounded pills. */
+    .chip.tag { color: var(--faint); background: transparent; border-color: var(--line-soft); border-radius: 999px; }
+
+    /* Skeleton */
+    .skeleton { position: relative; overflow: hidden; min-height: 168px; }
+    .skeleton::after { content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent); transform: translateX(-100%);
+      animation: shimmer 1.3s infinite; }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+    /* Footer + toast */
+    footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line-soft); color: var(--faint); font-size: 13px;
+      display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+    .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(8px);
+      background: var(--panel-2); border: 1px solid var(--accent); color: var(--text); padding: 10px 16px;
+      border-radius: 10px; font-size: 13.5px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    @media (max-width: 560px) { .wrap { width: calc(100% - 28px); } .sec-head { flex-direction: column; align-items: flex-start; gap: 2px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><span class="mono mark">{ }</span> FastMCP Endpoint Toolsets <small>&nbsp;dashboard</small></div>
+      <div id="live" class="live"><span class="dot"></span><span id="live-text">connecting…</span></div>
+    </div>
+
+    <header>
+      <div class="eyebrow">1 server / 1 port / scoped native MCP</div>
+      <h1>Stop flooding agents with every MCP tool.</h1>
+      <p class="lead">
+        Focused, URL-scoped native FastMCP endpoints from one server and one port.
+        Use <code>/mcp</code> for everything, or <code>/{toolset}/mcp</code> when an agent should only see the tools it needs.
+      </p>
+      <div class="stats" id="stats">
+        <div class="stat"><b id="stat-tools">—</b><span>tools</span></div>
+        <div class="stat"><b id="stat-sets">—</b><span>toolsets</span></div>
+        <div class="stat"><b>1</b><span>server / port</span></div>
+      </div>
+    </header>
+
+    <section>
+      <div class="sec-head"><h2>Server endpoints</h2><span class="note">click any row to copy its URL</span></div>
+      <div class="grid">
+        <button class="ep" data-copy="/"><span class="method">GET</span><span class="path">/</span><span class="desc">This dashboard</span></button>
+        <button class="ep" data-copy="/health"><span class="method">GET</span><span class="path">/health</span><span class="desc">Health check</span></button>
+        <button class="ep" data-copy="/toolsets"><span class="method">GET</span><span class="path">/toolsets</span><span class="desc">Discovery JSON</span></button>
+        <button class="ep" data-copy="/mcp"><span class="method mcp">MCP</span><span class="path">/mcp</span><span class="desc" id="all-count">All tools</span></button>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Scoped toolsets</h2><span class="note" id="sets-note"></span></div>
+      <div id="toolsets" class="grid" aria-live="polite"></div>
+    </section>
+
+    <footer>
+      <span>FastMCP Endpoint Toolsets</span>
+      <span>·</span>
+      <a href="/toolsets">/toolsets</a>
+      <a href="/health">/health</a>
+      <span>·</span>
+      <span>MIT licensed</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const origin = location.origin;
+    const toast = $("toast");
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 1500);
+    }
+
+    async function copyUrl(path) {
+      const url = origin + path;
+      try { await navigator.clipboard.writeText(url); showToast("Copied  " + url); }
+      catch { showToast(url); }
+    }
+
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-copy]");
+      if (el) copyUrl(el.dataset.copy);
+    });
+
+    function setLive(state, text) {
+      const live = $("live");
+      live.classList.remove("ok", "err");
+      if (state) live.classList.add(state);
+      $("live-text").textContent = text;
+    }
+
+    function skeletons(n) {
+      return Array.from({ length: n }, () => '<div class="card skeleton"></div>').join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function toolsetCard(item) {
+      const tools = item.tools.map((t) => `<span class="chip tool">${escapeHtml(t)}</span>`).join("");
+      const tags = item.tags.map((t) => `<span class="chip tag">#${escapeHtml(t)}</span>`).join("");
+      const n = item.tools.length;
+      return `
+        <article class="card">
+          <div class="card-head">
+            <h3>${escapeHtml(item.title)}</h3>
+            <span class="count">${n} tool${n === 1 ? "" : "s"}</span>
+          </div>
+          <p class="desc">${escapeHtml(item.description)}</p>
+          <button class="endpoint" data-copy="${escapeHtml(item.endpoint)}">
+            <span class="url">${escapeHtml(item.endpoint)}</span><span class="copy">COPY</span>
+          </button>
+          <div class="meta">
+            <div class="chips"><span class="label">Tools</span>${tools}</div>
+            <div class="chips"><span class="label">Tags</span>${tags}</div>
+          </div>
+        </article>`;
+    }
+
+    const root = $("toolsets");
+    root.innerHTML = skeletons(4);
+
+    fetch("/toolsets")
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then((data) => {
+        const total = data.all.tools.length;
+        const sets = data.toolsets.length;
+        $("stat-tools").textContent = total;
+        $("stat-sets").textContent = sets;
+        $("all-count").textContent = `All ${total} tools`;
+        $("sets-note").textContent = `${total} tools across ${sets} scoped endpoint${sets === 1 ? "" : "s"}`;
+        root.innerHTML = data.toolsets.map(toolsetCard).join("");
+        setLive("ok", "live");
+      })
+      .catch(() => {
+        root.innerHTML = `<div class="card"><div class="card-head"><h3>Can't reach /toolsets</h3></div>
+          <p class="desc">Start the server with <code>python server.py</code>, then refresh this page.</p></div>`;
+        setLive("err", "offline");
+      });
+  </script>
+</body>
+</html>
